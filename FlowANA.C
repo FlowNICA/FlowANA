@@ -10,6 +10,7 @@
 #include "TMath.h"
 #include "TRandom3.h"
 #include "TVector3.h"
+#include "TDatabasePDG.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -24,16 +25,23 @@ using namespace std;
 //List of histograms and Ntuples....
 
 static const int neta = 9;
-static const int ndet = 4;
+static const int ndet = 5;
 static const int ncent = 6;
 static const int nth = 3;
 static const int npid = 4;
 
 
+// List of MPD based cuts
+static const float MpdPtMin = 0.;
+static const float MpdPtMax = 3.;
+static const float MpdEtaMin = -1.5;
+static const float MpdEtaGap = 0.05;
+static const float MpdEtaMax = 1.5;
 
 
-static const int npt = 11; // 0.5 - 3.6 GeV/c - number of pT bins
-static const double bin_w[11]={0.2,0.4,0.6,0.8,1.0,1.2,1.4,1.8,2.3,2.8,4.0};
+
+static const int npt = 10; // 0.5 - 3.6 GeV/c - number of pT bins
+static const double bin_w[10]={0.2,0.4,0.6,0.8,1.0,1.2,1.4,1.8,2.3,2.8};
 
 static const float maxpt = 4.0; // max pt
 static const float minpt = 0.2; // min pt
@@ -41,13 +49,24 @@ static const float minpt = 0.2; // min pt
 
 TH1F *hpt[ncent][npt][npid];
 TH1F *hv2[ndet][ncent][npt][npid];
+TH1F *hv1[ndet][ncent][npt][npid];
 TH1F *hv22[ndet][npt][npid];
+TH1F *hv12[ndet][npt][npid];
+TProfile *pv2[ndet][ncent][npid];
+TProfile *pv22[ndet][npid];
+TProfile *pv1[ndet][ncent][npid];
+TProfile *pv12[ndet][npid];
+TProfile *pv1_y[ndet][ncent][npid];
+TProfile *pv12_y[ndet][npid];
 
 
 
 TH1F *H_Qw[neta];
 TH1F *H_EP[nth][neta];
 TH1F *H_Qv[nth][neta];
+TH1F *H_QvX[nth][neta];
+TH1F *H_QvY[nth][neta];
+TH1F *H_Phi[nth][neta];
 
 
 TH1F *HRes[nth][ndet][ncent];
@@ -141,6 +160,9 @@ for( int ieta=0; ieta<neta; ieta++ ){
 		for( int ieta=0; ieta<neta; ieta++ ){
 			H_EP[ith][ieta]->Write();
 			H_Qv[ith][ieta]->Write();
+			H_QvX[ith][ieta]->Write();
+			H_QvY[ith][ieta]->Write();
+			H_Phi[ith][ieta]->Write();
 		}
 	}
 
@@ -179,6 +201,7 @@ for( int idet=0; idet<ndet; idet++ ){
 			     for( int id=0; id<npid; id++ ){
 		  
 			            hv2[idet][icent][ipt][id]->Write();
+			            hv1[idet][icent][ipt][id]->Write();
 		    
 		         }
 	            }
@@ -187,6 +210,22 @@ for( int idet=0; idet<ndet; idet++ ){
 
 }
 
+for( int idet=0; idet<ndet; idet++ ){
+  for( int icent=0; icent<ncent; icent++ ){
+	  for( int id=0; id<npid; id++ ){
+      pv2[idet][icent][id]->Write();
+      pv1[idet][icent][id]->Write();
+      pv1_y[idet][icent][id]->Write();
+    }
+  }
+}
+for( int idet=0; idet<ndet; idet++ ){
+  for( int id=0; id<npid; id++ ){
+    pv22[idet][id]->Write();
+    pv12[idet][id]->Write();
+    pv12_y[idet][id]->Write();
+  }
+}
 
 for( int idet=0; idet<ndet; idet++ ){
                
@@ -196,6 +235,7 @@ for( int idet=0; idet<ndet; idet++ ){
 			     for( int id=0; id<npid; id++ ){
 		  
 			            hv22[idet][ipt][id]->Write();
+			            hv12[idet][ipt][id]->Write();
 		    
 		         
 	            }
@@ -267,8 +307,11 @@ for( int ieta=0; ieta<neta; ieta++ ) H_Qw[ieta] = new TH1F( Form("H_Qw_%d",ieta)
 
 for( int ith=0; ith<3; ith++ ){
      for( int ieta=0; ieta<neta; ieta++ ){
-  H_EP[ith][ieta] = new TH1F( Form("H_EP_%d_%d",ith,ieta), Form("H_EP_%d_%d",ith,ieta), 100, -TMath::Pi()/(ith+2.)-0.1, TMath::Pi()/(ith+2.)+0.10 );
+  H_EP[ith][ieta] = new TH1F( Form("H_EP_%d_%d",ith,ieta), Form("H_EP_%d_%d",ith,ieta), 372, -TMath::Pi()/(ith+1.)-0.1, TMath::Pi()/(ith+1.)+0.10 );
+  H_Phi[ith][ieta] = new TH1F( Form("H_Phi_%d_%d",ith,ieta), Form("H_Phi_%d_%d",ith,ieta), 372, -TMath::Pi()/(ith+1.)-0.1, TMath::Pi()/(ith+1.)+0.10 );
  H_Qv[ith][ieta] = new TH1F( Form("H_Qv_%d_%d",ith,ieta), Form("H_Qv_%d_%d",ith,ieta), 100, 0, 10 );
+ H_QvX[ith][ieta] = new TH1F( Form("H_QvX_%d_%d",ith,ieta), Form("H_QvX_%d_%d",ith,ieta), 200, -10, 10 );
+ H_QvY[ith][ieta] = new TH1F( Form("H_QvY_%d_%d",ith,ieta), Form("H_QvY_%d_%d",ith,ieta), 200, -10, 10 );
 		}
 	}
 
@@ -293,6 +336,7 @@ for( int idet=0; idet<ndet; idet++ ){
 			     for( int id=0; id<npid; id++ ){
 		  
 hv2[idet][icent][ipt][id] = new TH1F( Form("hv2_%d_%d_%d_%d",idet,icent,ipt,id), Form("hv2_%d_%d_%d_%d",idet,icent,ipt,id), 400, -10, 10 );			    
+hv1[idet][icent][ipt][id] = new TH1F( Form("hv1_%d_%d_%d_%d",idet,icent,ipt,id), Form("hv1_%d_%d_%d_%d",idet,icent,ipt,id), 400, -10, 10 );			    
 		    
 		         }
 	            }
@@ -301,6 +345,20 @@ hv2[idet][icent][ipt][id] = new TH1F( Form("hv2_%d_%d_%d_%d",idet,icent,ipt,id),
 
 }
 
+for( int idet=0; idet<ndet; idet++ ){
+               for( int icent=0; icent<ncent; icent++ ){
+
+			     for( int id=0; id<npid; id++ ){
+		  
+pv2[idet][icent][id] = new TProfile( Form("pv2_%d_%d_%d",idet,icent,id), Form("pv2_%d_%d_%d",idet,icent,id), 50, 0., 5. );			    
+pv1[idet][icent][id] = new TProfile( Form("pv1_%d_%d_%d",idet,icent,id), Form("pv1_%d_%d_%d",idet,icent,id), 50, 0., 5. );			    
+pv1_y[idet][icent][id] = new TProfile( Form("pv1_y_%d_%d_%d",idet,icent,id), Form("pv1_y_%d_%d_%d",idet,icent,id), 100, -5., 5. );			    
+		    
+	            }
+
+             }
+
+}
 
 
 for( int idet=0; idet<ndet; idet++ ){
@@ -311,6 +369,7 @@ for( int idet=0; idet<ndet; idet++ ){
 			     for( int id=0; id<npid; id++ ){
 		  
 hv22[idet][ipt][id] = new TH1F( Form("hv22_%d_%d_%d",idet,ipt,id), Form("hv22_%d_%d_%d",idet,ipt,id), 400, -10, 10 );			    
+hv12[idet][ipt][id] = new TH1F( Form("hv12_%d_%d_%d",idet,ipt,id), Form("hv12_%d_%d_%d",idet,ipt,id), 400, -10, 10 );			    
 		    
 		       
 	            }
@@ -319,6 +378,15 @@ hv22[idet][ipt][id] = new TH1F( Form("hv22_%d_%d_%d",idet,ipt,id), Form("hv22_%d
 
 }
 
+for( int idet=0; idet<ndet; idet++ ){
+			     for( int id=0; id<npid; id++ ){
+		  
+pv22[idet][id] = new TProfile( Form("pv22_%d_%d",idet,id), Form("pv22_%d_%d",idet,id), 50, 0., 5. );			    
+pv12[idet][id] = new TProfile( Form("pv12_%d_%d",idet,id), Form("pv12_%d_%d",idet,id), 50, 0., 5. );			    
+pv12_y[idet][id] = new TProfile( Form("pv12_y_%d_%d",idet,id), Form("pv12_y_%d_%d",idet,id), 100, -5., 5. );			    
+
+             }
+}
 
 
                for( int icent=0; icent<ncent; icent++ ){
@@ -352,10 +420,10 @@ hpt[icent][ipt][id] = new TH1F( Form("hpt_%d_%d_%d",icent,ipt,id), Form("hpt_%d_
 void FlowANA::ana_event(int jentry, int ientry) { 
 
 
-  float phiRP = gRandom->Uniform(0, 2.*TMath::Pi());
+  //float phiRP = gRandom->Uniform(0, 2.*TMath::Pi());
 
   // float phiRP = gRandom->Uniform(-1.0*TMath::Pi(),TMath::Pi());
- h2phirp->Fill(phiRP);
+ //h2phirp->Fill(phiRP);
 
   // centrality cut and vertex +/- 30 cm cut
   /*
@@ -386,6 +454,9 @@ void FlowANA::ana_event(int jentry, int ientry) {
 	float sumQxy[3][9][2] = {{{0}}}; //[ith][eta][x,y]
 	//float sumQxyFull[3][2] = {{{0}}};
 	float multQv[9] = {0}; //[eta]
+  float fhcalFullEP_x = 0.;
+  float fhcalFullEP_y = 0.;
+  float fhcalFullEP_phi = 0.;
 
 
  
@@ -406,12 +477,16 @@ double Nch_R2 = 0;
 
         float pt  = sqrt( TMath::Power(momx[itrk], 2.0 ) + TMath::Power(momy[itrk], 2.0 ) );
 	
-	float oldphi = atan2( momx[itrk], momy[itrk] );
+	float oldphi = atan2( momy[itrk], momx[itrk] );
 	float phi=oldphi;
 	
 	float the = atan2( pt, momz[itrk] );//atan2(pt/pz)
 	float eta = -log( tan( 0.5 * the ) );
-
+ 
+  float ch;
+  if (TDatabasePDG::Instance()->GetParticle(pdg[itrk]))
+    ch = 1./3.*TDatabasePDG::Instance()->GetParticle(pdg[itrk])->Charge();
+  else ch = -999.;
 	//	phi += phiRP;
 	// float px = pt * cos(phi);
 	//	float py = pt * sin(phi);
@@ -424,12 +499,13 @@ double Nch_R2 = 0;
 
 	    
         if( pt>0.1 && fabs(eta)<0.5 ) refMult1++;
-	if( pt>0.0 && fabs(eta)<0.5 ) refMult2++;
+	      if( pt>0.0 && fabs(eta)<0.5 ) refMult2++;
         if(eta >=  3.1 && eta <=  4.0) Nch_R++;
         if(eta >= -4.0 && eta <= -3.1) Nch_L++;
 
        
-        if( pt<0.15  || pt>2. ) continue;
+        //if( pt<0.15  || pt>2. ) continue;
+        if ( pt<MpdPtMin || pt>MpdPtMax ) continue;
 
         int fEta = -1;
 
@@ -447,22 +523,30 @@ double Nch_R2 = 0;
 	if( eta>3.0 && eta<5  )     fEta = 6; //West
 
 	// FHCal plane
-	if( eta>-5 && eta<-2 )      fEta = 7; //East
-	if( eta>2.0 && eta<5  )     fEta = 8; //West
+	if( eta>-5.0 && eta<-2.0 )      fEta = 7; //East
+	if( eta>2.0 && eta<5.0  )     fEta = 8; //West
 
 	// if( fabs(eta)>1.1 && fabs(eta)<2.9 )     fEta = 7; // RXN combined
         //if( fabs(eta)>3.0 && fabs(eta)<5.0 )     fEta = 8; // BBC combined
+
+  if( fEta>-1. ) H_Phi[0][fEta]->Fill( phi );
 	
+  if ( fEta < 3 && (ch == 0 || ch == -999.)) continue;
 
-
-           if( fEta>-1 ){
+           if( fEta>-1. ){
 			for( int ith=0; ith<3; ith++ ){
 				if (fEta < 7){
 					sumQxy[ith][fEta][0] += pt * cos( (ith+2.0) * phi );
 					sumQxy[ith][fEta][1] += pt * sin( (ith+2.0) * phi );
 				}else{
-					sumQxy[ith][fEta][0] += pt * cos( (ith+1.0) * phi );
-					sumQxy[ith][fEta][1] += pt * sin( (ith+1.0) * phi );
+          if (fEta == 7){
+            sumQxy[ith][fEta][0] += -1. * pt * cos( (ith+1.0) * phi );
+            sumQxy[ith][fEta][1] += -1. * pt * sin( (ith+1.0) * phi );
+          }
+          if (fEta == 8){
+            sumQxy[ith][fEta][0] += 1. * pt * cos( (ith+1.0) * phi );
+            sumQxy[ith][fEta][1] += 1. * pt * sin( (ith+1.0) * phi );
+          }
 				}
 				//if(fEta == 7 || fEta == 8){
 				//	sumQxyFull[ith][0] += pt * cos( (ith+1.0) * phi );
@@ -514,6 +598,8 @@ double Nch_R2 = 0;
       
   	float fEP[3][9]; //[ith][eta]
 	float fQv[3][9]; //[ith][eta]
+	float fQvX[3][9]; //[ith][eta]
+	float fQvY[3][9]; //[ith][eta]
 	for( int ith=0; ith<3; ith++ ){ // flow harmonic loop
 	  for( int ieta=0; ieta<9; ieta++ ){ // ep detector gap 
 	    if( multQv[ieta]>5 ){ // multiplicity > 5
@@ -528,13 +614,20 @@ double Nch_R2 = 0;
 				fEP[ith][ieta] /= ( ith + 1.0 );
 			}
  fQv[ith][ieta] = sqrt( TMath::Power( sumQxy[ith][ieta][0],2.0)+TMath::Power( sumQxy[ith][ieta][1], 2.0))/sqrt( multQv[ieta]);
+ fQvX[ith][ieta] = sumQxy[ith][ieta][0] / sqrt( multQv[ieta]);
+ fQvY[ith][ieta] = sumQxy[ith][ieta][1] / sqrt( multQv[ieta]);
  H_Qw[ieta]->Fill( multQv[ieta] );
 		}else{
 			fEP[ith][ieta] = -9999;
 			fQv[ith][ieta] = -9999;
+			fQvX[ith][ieta] = -9999;
+			fQvY[ith][ieta] = -9999;
 	    }// end of mult cut selection
 	  } // end of loop on EP detectors
 	} // end of flow harmonic loop
+  fhcalFullEP_x = sumQxy[0][7][0] + sumQxy[0][8][0];
+  fhcalFullEP_y = sumQxy[0][7][1] + sumQxy[0][8][1];
+  fhcalFullEP_phi = atan2( fhcalFullEP_y, fhcalFullEP_x );
 
 
 
@@ -543,6 +636,8 @@ double Nch_R2 = 0;
 	    if( fEP[ith][ieta]>-9000 ){ // EP reconstructed 
 				H_EP[ith][ieta]->Fill( fEP[ith][ieta] );
 				H_Qv[ith][ieta]->Fill( fQv[ith][ieta] );
+				H_QvX[ith][ieta]->Fill( fQvX[ith][ieta] );
+				H_QvY[ith][ieta]->Fill( fQvY[ith][ieta] );
 	    }// end of EP reconstructed
 	  }// end of eta loop
 	}// end of harm loop
@@ -551,12 +646,12 @@ double Nch_R2 = 0;
 		//Resolution
 	for( int ith=0; ith<3; ith++ ){
 		for( int icb=0; icb<4; icb++ ){
-			double psi1, psi2, fq1, fq2;
+			double psi1, psi2, fq1, fq2, HarmStart=2.;
        
 	       if ( icb==0 ){ psi1 = fEP[ith][0]; psi2 = fEP[ith][1]; fq1 = fQv[ith][0]; fq2 = fQv[ith][1]; } // TPC.E-TPC.W
 	       else if( icb==1 ){ psi1 = fEP[ith][3]; psi2 = fEP[ith][4]; fq1 = fQv[ith][3];  fq2 = fQv[ith][4]; } // RXN.E-RXN.W
 	       else if( icb==2 ){ psi1 = fEP[ith][5]; psi2 = fEP[ith][6]; fq1 = fQv[ith][5]; fq2 = fQv[ith][6]; } // BBC.E-BBC.W
-	       else { psi1 = fEP[ith][7]; psi2 = fEP[ith][8]; fq1 = fQv[ith][7]; fq2 = fQv[ith][8]; } // FHCal.E-FHCal.W
+	       else { psi1 = fEP[ith][7]; psi2 = fEP[ith][8]; fq1 = fQv[ith][7]; fq2 = fQv[ith][8]; HarmStart=1.; } // FHCal.E-FHCal.W
 		       
 
 		        
@@ -568,8 +663,8 @@ double Nch_R2 = 0;
 
 
 
-                        double dPsi = ( ith + 2. ) * ( psi1 - psi2 );
-		   	dPsi = atan2( sin(dPsi), cos(dPsi) );
+      double dPsi = ( ith + HarmStart ) * ( psi1 - psi2 );
+		  dPsi = atan2( sin(dPsi), cos(dPsi) );
 			if(fCent>-1&&fCent<6){
 			
 			  HRes[ith][icb][fCent]->Fill(cos(dPsi) );
@@ -600,33 +695,43 @@ double Nch_R2 = 0;
 
 // 11.5 gev
 //
-float res2tpc[6] = {0.323761,0.434068,0.433521,0.383028,0.307532,0.250556};
-float res2rxn[6] = {0.212259,0.333732,0.340171,0.303697,0.247778,0.206723};
-float res2bbc[6] = {1,1,1,1,1,1};
-float res2fhcal[6] = {0.219457,0.37629,0.417876,0.39807,0.340169,0.271286};
+//float res2tpc[6] = {0.323761,0.434068,0.433521,0.383028,0.307532,0.250556};
+//float res2rxn[6] = {0.212259,0.333732,0.340171,0.303697,0.247778,0.206723};
+//float res2bbc[6] = {1,1,1,1,1,1};
+//float res2fhcal[6] = {0.219457,0.37629,0.417876,0.39807,0.340169,0.271286};
 
 // 7.7 gev
 //
-//float res2tpc[6] = {0.279143,0.404904,0.410895,0.364538,0.298188,0.249491};
-//float res2rxn[6] = {0.171143,0.278782,0.277882,0.234889,0.180159,0.142501};
-//float res2bbc[6] = {0,0,0,0,0,0};
-//float res2fhcal[6] = {0.261058,0.463961,0.520235,0.504925,0.444674,0.355923};
+float res2tpc[6] = {0.21354,0.315515,0.321321,0.283796,0.231463,0.188468};
+float res2rxn[6] = {0.173633,0.281287,0.280712,0.237884,0.183618,0.142537};
+float res2bbc[6] = {0,0,0,0,0,0};
+float res2fhcal[6] = {0.213222,0.451823,0.526875,0.527581,0.484467,0.412038};
+float res2fhcalFull[6] = {0.368115,0.655034,0.722089,0.722674,0.685413,0.615338};
+float res1fhcalFull[6] = {0.710464,0.88781,0.916106,0.916335,0.901146,0.869028};
 
 if(fCent>=0&&fCent<6){
 
  
-
+  float phiRP = 0.; // True RP plane angle
   
   for(int itrk=0;itrk<nh;itrk++) {  //track loop
 
         float pt  = sqrt( TMath::Power(momx[itrk], 2.0 ) + TMath::Power(momy[itrk], 2.0 ) );
 	
-	float oldphi = atan2( momx[itrk], momy[itrk] );
+	float oldphi = atan2( momy[itrk], momx[itrk] );
 	float phi=oldphi;
+	float dphiRP = atan2( momy[itrk], momx[itrk] ) - phiRP;
+  float oldphiV1 = atan2( momy[itrk], momx[itrk] );
+  float phiV1 = atan2( sin(oldphiV1), cos(oldphiV1) );
 	
 	float the = atan2( pt, momz[itrk] );//atan2(pt/pz)
 	float eta = -log( tan( 0.5 * the ) );
+        float rapidity = 0.5*log( (ene[itrk] + momz[itrk])/(ene[itrk] - momz[itrk]) );
 
+  float ch;
+  if (TDatabasePDG::Instance()->GetParticle(pdg[itrk]))
+    ch = 1./3.*TDatabasePDG::Instance()->GetParticle(pdg[itrk])->Charge();
+  else ch = -999.;
         // phi += phiRP;
 	//  float px = pt * cos(phi);
 	//	float py = pt * sin(phi);
@@ -635,8 +740,10 @@ if(fCent>=0&&fCent<6){
 
 	
 
-        if( pt<0.15  || pt>4.0 ) continue;
-
+        //if( pt<0.15  || pt>4.0 ) continue;
+        if ( pt<MpdPtMin || pt>MpdPtMax ) continue;
+        //if ( eta<MpdEtaMin || eta>MpdEtaMax ) continue;
+				if( ch == 0 || ch == -999. ) continue;
 
 	
        int ipt = 0;
@@ -648,31 +755,58 @@ if(fCent>=0&&fCent<6){
 	float v2rxn=-999.0;
 	float v2bbc=-999.0;
 	float v2fhcal=-999.0;
+	float v2fhcalFull=-999.0;
+	float v1fhcalFull=-999.0;
+  float v2RP=-999.0;
+  float v1RP=-999.0;
 
-	if(eta>0&&eta<1.0){
+	if(eta>MpdEtaGap&&eta<MpdEtaMax){
          v2tpc = cos(2.0 * (phi-fEP[0][0]) )/res2tpc[fCent];
          v2rxn = cos(2.0 * (phi-fEP[0][3]) )/res2rxn[fCent];
          v2bbc = cos(2.0 * (phi-fEP[0][5]) )/res2bbc[fCent];
          v2fhcal = cos(2.0 * (phi-fEP[0][7]) )/res2fhcal[fCent];
- 
+         v2fhcalFull = cos(2.0 * (phi-fhcalFullEP_phi) )/res2fhcalFull[fCent];
+         v2RP = cos(2.0 * (dphiRP) );
+         v1fhcalFull = 1.0 * cos(1.0 * (phiV1-fhcalFullEP_phi) )/res1fhcalFull[fCent];
+         v1RP = 1.0 * cos(1.0 * (dphiRP) );
+         
 	}
 
-        if(eta<0&&eta>-1.0){
+        if(eta<-1.*MpdEtaGap&&eta>-MpdEtaMin){
          v2tpc = cos(2.0 * (phi-fEP[0][1]) )/res2tpc[fCent];
          v2rxn = cos(2.0 * (phi-fEP[0][4]) )/res2rxn[fCent];
          v2bbc = cos(2.0 * (phi-fEP[0][6]) )/res2bbc[fCent];
          v2fhcal = cos(2.0 * (phi-fEP[0][8]) )/res2fhcal[fCent];
+         v2fhcalFull = cos(2.0 * (phi-fhcalFullEP_phi) )/res2fhcalFull[fCent];
+         v2RP = cos(2.0 * (dphiRP) );
+        //  v1fhcalFull = -1.0 * cos(1.0 * (phi-fhcalFullEP_phi) )/res1fhcalFull[fCent];
+         v1RP = -1.0 * cos(1.0 * (dphiRP) );
  
 	}
 
         
 	
 
-        if(fabs(eta)<1.0){
+        if(fabs(eta)>MpdEtaGap&&fabs(eta)<MpdEtaMax){
 	  hv2[0][fCent][ipt][0]->Fill(v2tpc);
           hv2[1][fCent][ipt][0]->Fill(v2rxn);
           hv2[2][fCent][ipt][0]->Fill(v2bbc);
-          hv2[3][fCent][ipt][0]->Fill(v2fhcal);
+          hv2[3][fCent][ipt][0]->Fill(v2fhcalFull);
+          hv2[4][fCent][ipt][0]->Fill(v2RP);
+          hv1[3][fCent][ipt][0]->Fill(v1fhcalFull);
+          hv1[4][fCent][ipt][0]->Fill(v1RP);
+	        if (v2tpc!=-999.)    pv2[0][fCent][0]->Fill(pt,v2tpc);
+          if (v2rxn!=-999.)    pv2[1][fCent][0]->Fill(pt,v2rxn);
+          if (v2bbc!=-999.)    pv2[2][fCent][0]->Fill(pt,v2bbc);
+          //if (v2fhcal!=-999.)  pv2[3][fCent][0]->Fill(pt,v2fhcal);
+          if (v2fhcalFull!=-999.)  pv2[3][fCent][0]->Fill(pt,v2fhcalFull);
+          if (v2RP!=-999.)     pv2[4][fCent][0]->Fill(pt,v2RP);
+          if (v1fhcalFull!=-999.)  pv1[3][fCent][0]->Fill(pt,v1fhcalFull);
+          if (v1RP!=-999.)     pv1[4][fCent][0]->Fill(pt,v1RP);
+          if (v1fhcalFull!=-999.)  pv1[3][fCent][0]->Fill(pt,v1fhcalFull);
+          if (v1RP!=-999.)     pv1[4][fCent][0]->Fill(pt,v1RP);
+          //std::cout << "v2TPC " << v2tpc << "; v2RP " << v2RP << std::endl;
+          //cos(1.0 * (phi-fhcalFullEP_phi) )/res1fhcalFull[fCent]
 	  hpt[fCent][ipt][0]->Fill(pt);
 
           if(fCent>0&&fCent<4){
@@ -680,7 +814,18 @@ if(fCent>=0&&fCent<6){
           hv22[0][ipt][0]->Fill(v2tpc);
           hv22[1][ipt][0]->Fill(v2rxn);
           hv22[2][ipt][0]->Fill(v2bbc);
-          hv22[3][ipt][0]->Fill(v2fhcal);
+          hv22[3][ipt][0]->Fill(v2fhcalFull);
+          hv22[4][ipt][0]->Fill(v2RP);
+          hv12[3][ipt][0]->Fill(v1fhcalFull);
+          hv12[4][ipt][0]->Fill(v1RP);
+          if (v2tpc!=-999.)    pv22[0][0]->Fill(pt,v2tpc);
+          if (v2rxn!=-999.)    pv22[1][0]->Fill(pt,v2rxn);
+          if (v2bbc!=-999.)    pv22[2][0]->Fill(pt,v2bbc);
+          //if (v2fhcal!=-999.)  pv22[3][0]->Fill(pt,v2fhcal);
+          if (v2fhcalFull!=-999.)  pv22[3][0]->Fill(pt,v2fhcalFull);
+          if (v2RP!=-999.)     pv22[4][0]->Fill(pt,v2RP);
+          if (v1fhcalFull!=-999.)  pv12[3][0]->Fill(pt,v1fhcalFull);
+          if (v1RP!=-999.)     pv12[4][0]->Fill(pt,v1RP);
 
 	  }
 	  
@@ -689,7 +834,18 @@ if(fCent>=0&&fCent<6){
               hv2[0][fCent][ipt][1]->Fill(v2tpc);
               hv2[1][fCent][ipt][1]->Fill(v2rxn);
               hv2[2][fCent][ipt][1]->Fill(v2bbc);
-			  hv2[3][fCent][ipt][1]->Fill(v2fhcal);
+			  hv2[3][fCent][ipt][1]->Fill(v2fhcalFull);
+			  hv2[4][fCent][ipt][1]->Fill(v2RP);
+			  hv1[3][fCent][ipt][1]->Fill(v1fhcalFull);
+			  hv1[4][fCent][ipt][1]->Fill(v1RP);
+        if (v2tpc!=-999.)    pv2[0][fCent][1]->Fill(pt,v2tpc);
+        if (v2rxn!=-999.)    pv2[1][fCent][1]->Fill(pt,v2rxn);
+        if (v2bbc!=-999.)    pv2[2][fCent][1]->Fill(pt,v2bbc);
+			  //if (v2fhcal!=-999.)  pv2[3][fCent][1]->Fill(pt,v2fhcal);
+			  if (v2fhcalFull!=-999.)  pv2[3][fCent][1]->Fill(pt,v2fhcalFull);
+			  if (v2RP!=-999.)     pv2[4][fCent][1]->Fill(pt,v2RP);
+			  if (v1fhcalFull!=-999.)  pv1[3][fCent][1]->Fill(pt,v1fhcalFull);
+			  if (v1RP!=-999.)     pv1[4][fCent][1]->Fill(pt,v1RP);
 	      hpt[fCent][ipt][1]->Fill(pt);
 
 
@@ -698,7 +854,18 @@ if(fCent>=0&&fCent<6){
           hv22[0][ipt][1]->Fill(v2tpc);
           hv22[1][ipt][1]->Fill(v2rxn);
           hv22[2][ipt][1]->Fill(v2bbc);
-          hv22[3][ipt][1]->Fill(v2fhcal);
+          hv22[3][ipt][1]->Fill(v2fhcalFull);
+          hv22[4][ipt][1]->Fill(v2RP);
+          hv12[3][ipt][1]->Fill(v1fhcalFull);
+          hv12[4][ipt][1]->Fill(v1RP);
+          if (v2tpc!=-999.)    pv22[0][1]->Fill(pt,v2tpc);
+          if (v2rxn!=-999.)    pv22[1][1]->Fill(pt,v2rxn);
+          if (v2bbc!=-999.)    pv22[2][1]->Fill(pt,v2bbc);
+          //if (v2fhcal!=-999.)  pv22[3][1]->Fill(pt,v2fhcal);
+          if (v2fhcalFull!=-999.)  pv22[3][1]->Fill(pt,v2fhcalFull);
+          if (v2RP!=-999.)     pv22[4][1]->Fill(pt,v2RP);
+          if (v1fhcalFull!=-999.)  pv12[3][1]->Fill(pt,v1fhcalFull);
+          if (v1RP!=-999.)     pv12[4][1]->Fill(pt,v1RP);
 
 	  }
 
@@ -712,7 +879,18 @@ if(fCent>=0&&fCent<6){
               hv2[0][fCent][ipt][2]->Fill(v2tpc);
               hv2[1][fCent][ipt][2]->Fill(v2rxn);
               hv2[2][fCent][ipt][2]->Fill(v2bbc);
-			  hv2[3][fCent][ipt][2]->Fill(v2fhcal);
+			  hv2[3][fCent][ipt][2]->Fill(v2fhcalFull);
+			  hv2[4][fCent][ipt][2]->Fill(v2RP);
+			  hv1[3][fCent][ipt][2]->Fill(v1fhcalFull);
+			  hv1[4][fCent][ipt][2]->Fill(v1RP);
+        if (v2tpc!=-999.)    pv2[0][fCent][2]->Fill(pt,v2tpc);
+        if (v2rxn!=-999.)    pv2[1][fCent][2]->Fill(pt,v2rxn);
+        if (v2bbc!=-999.)    pv2[2][fCent][2]->Fill(pt,v2bbc);
+			  //if (v2fhcal!=-999.)  pv2[3][fCent][2]->Fill(pt,v2fhcal);
+			  if (v2fhcalFull!=-999.)  pv2[3][fCent][2]->Fill(pt,v2fhcalFull);
+			  if (v2RP!=-999.)     pv2[4][fCent][2]->Fill(pt,v2RP);
+			  if (v1fhcalFull!=-999.)  pv1[3][fCent][2]->Fill(pt,v1fhcalFull);
+			  if (v1RP!=-999.)     pv1[4][fCent][2]->Fill(pt,v1RP);
 	      hpt[fCent][ipt][2]->Fill(pt);
 
           if(fCent>0&&fCent<4){
@@ -720,7 +898,18 @@ if(fCent>=0&&fCent<6){
           hv22[0][ipt][2]->Fill(v2tpc);
           hv22[1][ipt][2]->Fill(v2rxn);
           hv22[2][ipt][2]->Fill(v2bbc);
-          hv22[3][ipt][2]->Fill(v2fhcal);
+          hv22[3][ipt][2]->Fill(v2fhcalFull);
+          hv22[4][ipt][2]->Fill(v2RP);
+          hv12[3][ipt][2]->Fill(v1fhcalFull);
+          hv12[4][ipt][2]->Fill(v1RP);
+          if (v2tpc!=-999.)    pv22[0][2]->Fill(pt,v2tpc);
+          if (v2rxn!=-999.)    pv22[1][2]->Fill(pt,v2rxn);
+          if (v2bbc!=-999.)    pv22[2][2]->Fill(pt,v2bbc);
+          //if (v2fhcal!=-999.)  pv22[3][2]->Fill(pt,v2fhcal);
+          if (v2fhcalFull!=-999.)  pv22[3][2]->Fill(pt,v2fhcalFull);
+          if (v2RP!=-999.)     pv22[4][2]->Fill(pt,v2RP);
+          if (v1fhcalFull!=-999.)  pv12[3][2]->Fill(pt,v1fhcalFull);
+          if (v1RP!=-999.)     pv12[4][2]->Fill(pt,v1RP);
 
 	  }
 	      
@@ -732,7 +921,18 @@ if(fCent>=0&&fCent<6){
               hv2[0][fCent][ipt][3]->Fill(v2tpc);
               hv2[1][fCent][ipt][3]->Fill(v2rxn);
               hv2[2][fCent][ipt][3]->Fill(v2bbc);
-			  hv2[3][fCent][ipt][3]->Fill(v2fhcal);
+			  hv2[3][fCent][ipt][3]->Fill(v2fhcalFull);
+        hv2[4][fCent][ipt][3]->Fill(v2RP);
+			  hv1[3][fCent][ipt][3]->Fill(v1fhcalFull);
+        hv1[4][fCent][ipt][3]->Fill(v1RP);
+        if (v2tpc!=-999.)    pv2[0][fCent][3]->Fill(pt,v2tpc);
+        if (v2rxn!=-999.)    pv2[1][fCent][3]->Fill(pt,v2rxn);
+        if (v2bbc!=-999.)    pv2[2][fCent][3]->Fill(pt,v2bbc);
+			  //if (v2fhcal!=-999.)  pv2[3][fCent][3]->Fill(pt,v2fhcal);
+			  if (v2fhcalFull!=-999.)  pv2[3][fCent][3]->Fill(pt,v2fhcalFull);
+			  if (v2RP!=-999.)     pv2[4][fCent][3]->Fill(pt,v2RP);
+			  if (v1fhcalFull!=-999.)  pv1[3][fCent][3]->Fill(pt,v1fhcalFull);
+			  if (v1RP!=-999.)     pv1[4][fCent][3]->Fill(pt,v1RP);
 	      hpt[fCent][ipt][3]->Fill(pt);
 
            if(fCent>0&&fCent<4){
@@ -740,7 +940,18 @@ if(fCent>=0&&fCent<6){
           hv22[0][ipt][3]->Fill(v2tpc);
           hv22[1][ipt][3]->Fill(v2rxn);
           hv22[2][ipt][3]->Fill(v2bbc);
-          hv22[3][ipt][3]->Fill(v2fhcal);
+          hv22[3][ipt][3]->Fill(v2fhcalFull);
+          hv22[4][ipt][3]->Fill(v2RP);
+          hv12[3][ipt][3]->Fill(v1fhcalFull);
+          hv12[4][ipt][3]->Fill(v1RP);
+          if (v2tpc!=-999.)    pv22[0][3]->Fill(pt,v2tpc);
+          if (v2rxn!=-999.)    pv22[1][3]->Fill(pt,v2rxn);
+          if (v2bbc!=-999.)    pv22[2][3]->Fill(pt,v2bbc);
+          //if (v2fhcal!=-999.)  pv22[3][3]->Fill(pt,v2fhcal);
+          if (v2fhcalFull!=-999.)  pv22[3][3]->Fill(pt,v2fhcalFull);
+          if (v2RP!=-999.)     pv22[4][3]->Fill(pt,v2RP);
+          if (v1fhcalFull!=-999.)  pv12[3][3]->Fill(pt,v1fhcalFull);
+          if (v1RP!=-999.)     pv12[4][3]->Fill(pt,v1RP);
 
 	  }
 	      
@@ -750,7 +961,38 @@ if(fCent>=0&&fCent<6){
 	   
 	}
 
-        
+  if(pt>0.2&&pt<2.){
+    pv1_y[3][fCent][0]->Fill(rapidity,cos(1.0 * (phi-fhcalFullEP_phi) )/res1fhcalFull[fCent]);
+    pv1_y[4][fCent][0]->Fill(rapidity,cos(1.0 * (dphiRP) )); 
+    if(fCent>0&&fCent<4){
+      pv12_y[3][0]->Fill(rapidity,cos(1.0 * (phi-fhcalFullEP_phi) )/res1fhcalFull[fCent]);
+      pv12_y[4][0]->Fill(rapidity,cos(1.0 * (dphiRP) ));
+    }
+    if ( pdg[itrk]==211){
+      pv1_y[3][fCent][1]->Fill(rapidity,cos(1.0 * (oldphiV1 - fhcalFullEP_phi) ));///res1fhcalFull[fCent]);
+      pv1_y[4][fCent][1]->Fill(rapidity,cos(1.0 * (dphiRP) )); 
+      if(fCent>0&&fCent<4){
+        pv12_y[3][1]->Fill(rapidity,cos(1.0 * (phi-fhcalFullEP_phi) )/res1fhcalFull[fCent]);
+        pv12_y[4][1]->Fill(rapidity,cos(1.0 * (dphiRP) ));
+      }
+    }
+    if ( pdg[itrk]==321){
+      pv1_y[3][fCent][2]->Fill(rapidity,cos(1.0 * (phi-fhcalFullEP_phi) )/res1fhcalFull[fCent]);
+      pv1_y[4][fCent][2]->Fill(rapidity,cos(1.0 * (dphiRP) )); 
+      if(fCent>0&&fCent<4){
+        pv12_y[3][2]->Fill(rapidity,cos(1.0 * (phi-fhcalFullEP_phi) )/res1fhcalFull[fCent]);
+        pv12_y[4][2]->Fill(rapidity,cos(1.0 * (dphiRP) ));
+      }
+    }
+    if ( pdg[itrk]==2212){
+      pv1_y[3][fCent][3]->Fill(rapidity,cos(1.0 * (phi-fhcalFullEP_phi) )/res1fhcalFull[fCent]);
+      pv1_y[4][fCent][3]->Fill(rapidity,cos(1.0 * (dphiRP) )); 
+      if(fCent>0&&fCent<4){
+        pv12_y[3][3]->Fill(rapidity,cos(1.0 * (phi-fhcalFullEP_phi) )/res1fhcalFull[fCent]);
+        pv12_y[4][3]->Fill(rapidity,cos(1.0 * (dphiRP) ));
+      }
+    }
+  }
 
 
 

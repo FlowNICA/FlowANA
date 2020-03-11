@@ -6,7 +6,7 @@ struct coord
     float yup;
 };
 
-void ReadFlow(const char *inFileName)
+void GraphFlow(const char *inFileName)
 {
     // Setting up global variables for the plot
     gROOT->SetStyle("Pub");
@@ -167,71 +167,6 @@ void ReadFlow(const char *inFileName)
         vV2RP.clear(); eV2RP.clear();
     }
 
-    TCanvas *canv[ncent];
-    TLegend *leg[ncent][npid];
-    TLine   *line0 = new TLine();
-    coord lc[npid] = {{0.2,0.7,0.55,0.89},{0.2,0.82,0.55,0.89},{0.2,0.82,0.55,0.89},{0.2,0.82,0.55,0.89}};
-    line0->SetLineStyle(2);
-    line0->SetLineColor(4);
-    line0->SetLineWidth(1);
-    for (int icent=0; icent<ncent; icent++)
-    {
-        canv[icent] = new TCanvas(Form("canv_%i",icent),Form("canv cent %i",icent),900,900);
-        canv[icent] ->Divide(2,2);
-    }
-    for (int icent=0; icent<ncent; icent++)
-    {
-        for (int ipid=0;ipid<npid;ipid++)
-        {
-            canv[icent]->cd(ipid+1);
-            grv2tpc[icent][ipid]->Draw("AP PLC PMC");
-            grv2RP[icent][ipid]->Draw("P PLC PMC");
-            grv2fhcal[icent][ipid]->Draw("P PLC PMC");
-            leg[icent][ipid] = new TLegend(lc[ipid].xlow,lc[ipid].ylow,lc[ipid].xup,lc[ipid].yup);
-            leg[icent][ipid]->SetBorderSize(0.);
-            leg[icent][ipid]->SetHeader(Form("%s, %s",hCent[icent].Data(),hName[ipid].Data()),"C");
-            if (ipid == 0)
-            {
-                leg[icent][ipid]->AddEntry(grv2tpc[icent][ipid],"v2{TPC}","p");
-                leg[icent][ipid]->AddEntry(grv2RP[icent][ipid],"v2{RP}","p");
-                leg[icent][ipid]->AddEntry(grv2fhcal[icent][ipid],"v2{FHCal}","p");
-            }
-            leg[icent][ipid]->Draw();
-
-            line0->DrawLine(0.,0.,3.49,0.);
-        }
-        // canv[icent]->SaveAs(Form("/home/peter/Documents/WorkLocal/STAR/Pics/Models/EPflow/v2_cent%i.png",icent));
-            if (icent == 0)
-                canv[icent]->Print(Form("./v2.pdf("),"pdf");
-            if (icent == 5)
-                canv[icent]->Print(Form("./v2.pdf)"),"pdf");
-            if (icent != 0 && icent != 5)
-                canv[icent]->Print(Form("./v2.pdf"),"pdf");
-    }
-
-    TCanvas *canv2 = new TCanvas("canv2","10-40%", 900, 900);
-    TLegend *leg2[npid];
-    canv2->Divide(2,2);
-    for (int ipid=0;ipid<npid;ipid++) {
-        canv2->cd(ipid + 1);
-        grv22tpc[ipid]->Draw("AP PLC PMC");
-        grv22RP[ipid]->Draw("P PLC PMC");
-        grv22fhcal[ipid]->Draw("P PLC PMC");
-
-        leg2[ipid] = new TLegend(lc[ipid].xlow,lc[ipid].ylow,lc[ipid].xup,lc[ipid].yup);
-        leg2[ipid]->SetBorderSize(0.);
-        leg2[ipid]->SetHeader(Form("10-40%, %s",hName[ipid].Data()),"C");
-        if (ipid == 0)
-        {
-            leg2[ipid]->AddEntry(grv22tpc[ipid],"v2{TPC}","p");
-            leg2[ipid]->AddEntry(grv22fhcal[ipid],"v2{RP}","p");
-            leg2[ipid]->AddEntry(grv22fhcal[ipid],"v2{FHCal}","p");
-        }
-        leg2[ipid]->Draw();
-
-        line0->DrawLine(0.,0.,3.49,0.);
-    }
-    canv2->SaveAs("./v2_cent1040.pdf");
     
     TFile *fo = new TFile("./v2_graphs.root","recreate");
     fo->cd();
@@ -244,7 +179,6 @@ void ReadFlow(const char *inFileName)
             grv2RP[icent][ipid]->Write();
             grv2fhcal[icent][ipid]->Write();
         }
-        canv[icent]->Write();
     } 
     for (int ipid=0;ipid<npid;ipid++)
     {
@@ -252,6 +186,5 @@ void ReadFlow(const char *inFileName)
         grv22RP[ipid]->Write();
         grv22fhcal[ipid]->Write();
     }
-    canv2->Write();
     fo->Close();
 }

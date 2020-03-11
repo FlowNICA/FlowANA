@@ -51,7 +51,8 @@ gSystem->Load(libMathMore.so);
 
 //TFile *file = new TFile("sum.root");
 //TFile *file = new TFile("./out/res_11gev.root");
-TFile *file = new TFile("./out/res_7gev.root");
+//TFile *file = new TFile("./out/res_7gev_new.root");
+TFile *file = new TFile("./OUT/7gev/urqmd_flow_7gev_check.root");
   
 char hname1[800];
 char title[800];
@@ -63,6 +64,8 @@ char title[800];
  float res2rxnEW[6]; 
  float res2bbcEW[6];
  float res2fhcalEW[6];
+ float res2fhcalFull[6];
+ float res1fhcalFull[6];
 
 float cent[6]={5,15,25,35,45,55};
 float eres[6];
@@ -75,9 +78,10 @@ for (int ic=0; ic<6; ic++) {
 (void) sprintf(hname1,"HRes_%i_%i_%i",0,0,ic);
 TH1F *h3 = (TH1F*) file->Get(hname1);
 res = sqrt(h3->GetMean());
-chi = GetChi(res,1.,50);
-chiF = TMath::Sqrt(2)*chi;
-resF = GetRes(chiF,1.);
+//chi = GetChi(res,1.,50);
+//chiF = TMath::Sqrt(2)*chi;
+//resF = GetRes(chiF,1.);
+resF=sqrt(h3->GetMean());
 res2tpcEW[ic]=resF;//sqrt(h3->GetMean());
 
 (void) sprintf(hname1,"HRes_%i_%i_%i",0,1,ic);
@@ -91,10 +95,21 @@ res2bbcEW[ic]=sqrt(h5->GetMean());
 (void) sprintf(hname1,"HRes_%i_%i_%i",0,3,ic);
 TH1F *h6 = (TH1F*) file->Get(hname1);
 res = sqrt(h6->GetMean());
-chi = GetChi(res,2.,50);
-chiF = TMath::Sqrt(2)*chi;
+chi = GetChi(res,1.,50);
+chiF = chi;//TMath::Sqrt(2)*chi;
 resF = GetRes(chiF,2.);
 res2fhcalEW[ic]=resF;
+chiF = TMath::Sqrt(2)*chi;
+resF = GetRes(chiF,2.);
+res2fhcalFull[ic]=resF;
+
+(void) sprintf(hname1,"HRes_%i_%i_%i",0,3,ic);
+TH1F *h7 = (TH1F*) file->Get(hname1);
+res = sqrt(h7->GetMean());
+chi = GetChi(res,1.,50);
+chiF = TMath::Sqrt(2)*chi;
+resF = GetRes(chiF,1.);
+res1fhcalFull[ic]=resF;
 
  eres[ic]=0.01;
  ecent[ic]=0.03;
@@ -127,6 +142,18 @@ res2fhcalEW[ic]=resF;
  cout << "float res2fhcal[6] = {";
  for (int ic=0; ic<6; ic++) {
    cout << res2fhcalEW[ic];
+   if (ic < 5) cout << ",";
+   else cout << "};" << endl;
+ }
+ cout << "float res2fhcalFull[6] = {";
+ for (int ic=0; ic<6; ic++) {
+   cout << res2fhcalFull[ic];
+   if (ic < 5) cout << ",";
+   else cout << "};" << endl;
+ }
+ cout << "float res1fhcalFull[6] = {";
+ for (int ic=0; ic<6; ic++) {
+   cout << res1fhcalFull[ic];
    if (ic < 5) cout << ",";
    else cout << "};" << endl;
  }
@@ -178,6 +205,7 @@ sprintf(title,"PHSD: #sigma_{RP}   vs centrality for v_{2} , Au+Au  #sqrt{s_{NN}
   TGraphErrors *gr2;
   TGraphErrors *gr3;
   TGraphErrors *gr4;
+  TGraphErrors *gr5;
 
 
 
@@ -219,6 +247,13 @@ sprintf(title,"PHSD: #sigma_{RP}   vs centrality for v_{2} , Au+Au  #sqrt{s_{NN}
  gr4->SetMarkerSize(1.2);
  gr4->Draw("P");
 
+ // const int npt=12;
+ gr5 = new TGraphErrors(6,cent,res2fhcalFull,ecent,eres);
+ gr5->SetTitle("TGraphErrors Example ");
+ gr5->SetMarkerColor(kBlue);
+ gr5->SetMarkerStyle(26);
+ gr5->SetMarkerSize(1.2);
+ gr5->Draw("P");
 
 TF1 *f1 = new TF1("f1","[0]+[1]*(x)+[2]/x+[3]*x*x",5,55);
 gr3->Fit("f1","R+");

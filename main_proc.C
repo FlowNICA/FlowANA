@@ -13,10 +13,13 @@ void main_proc(const char *filelist, const char *output = "./test1.root")
   TChain *chain = new TChain("mctree");
   std::ifstream file(filelist);
   std::string str;
+  int nfiles = 0;
   while (std::getline(file,str))
   {
     chain->Add(str.c_str());
+    nfiles++;
   }
+  std::cout << nfiles << " files were opened." << std::endl;
 
   FlowANA *t = new FlowANA(chain);
   t->ana_init(output);

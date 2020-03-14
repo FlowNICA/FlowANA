@@ -26,7 +26,7 @@ using namespace std;
 
 static const int neta = 9;
 static const int ndet = 5;
-static const int ncent = 6;
+static const int ncent = 8;
 static const int nth = 3;
 static const int npid = 4;
 
@@ -38,7 +38,17 @@ static const float MpdEtaMin = -1.5;
 static const float MpdEtaGap = 0.05;
 static const float MpdEtaMax = 1.5;
 
-
+// List of STAR based cuts (for 7.7 GeV)
+static const float StarVtxZ = 70.;
+static const float StarPtMin = 0.2;
+static const float StarPtMax = 2.0;
+static const float StarEtaMin = -1.;
+static const float StarEtaMax = 1.;
+static const float StarEtaGap = 0.05;
+static const float StarProtonPtMin = 0.4;
+static const float StarProtonPtMax = 2.0;
+static const float StarPionPtMin = 0.2;
+static const float StarPionPMax = 1.6;
 
 static const int npt = 10; // 0.5 - 3.6 GeV/c - number of pT bins
 static const double bin_w[10]={0.2,0.4,0.6,0.8,1.0,1.2,1.4,1.8,2.3,2.8};
@@ -506,6 +516,7 @@ double Nch_R2 = 0;
        
         //if( pt<0.15  || pt>2. ) continue;
         if ( pt<MpdPtMin || pt>MpdPtMax ) continue;
+        //if ( pt<StarPtMin || pt>StarPtMax ) continue;
 
         int fEta = -1;
 
@@ -519,12 +530,16 @@ double Nch_R2 = 0;
        	if( eta>1.0 && eta<3.0 )     fEta = 4; // RXN West
 
 	// BBC plane 
-	if( eta>-5 && eta<-3 )      fEta = 5; //East
-	if( eta>3.0 && eta<5  )     fEta = 6; //West
+	//if( eta>-5 && eta<-3 )      fEta = 5; //East
+	//if( eta>3.0 && eta<5  )     fEta = 6; //West
 
 	// FHCal plane
 	if( eta>-5.0 && eta<-2.0 )      fEta = 7; //East
 	if( eta>2.0 && eta<5.0  )     fEta = 8; //West
+	
+	// BBC plane - first harmonic
+	//if( eta>-5.0 && eta<-3.3 )      fEta = 7; //East
+	//if( eta>3.3 && eta<5.0  )     fEta = 8; //West
 
 	// if( fabs(eta)>1.1 && fabs(eta)<2.9 )     fEta = 7; // RXN combined
         //if( fabs(eta)>3.0 && fabs(eta)<5.0 )     fEta = 8; // BBC combined
@@ -665,7 +680,7 @@ double Nch_R2 = 0;
 
       double dPsi = ( ith + HarmStart ) * ( psi1 - psi2 );
 		  dPsi = atan2( sin(dPsi), cos(dPsi) );
-			if(fCent>-1&&fCent<6){
+			if(fCent>-1&&fCent<ncent){
 			
 			  HRes[ith][icb][fCent]->Fill(cos(dPsi) );
 
@@ -702,14 +717,14 @@ double Nch_R2 = 0;
 
 // 7.7 gev
 //
-float res2tpc[6] = {0.21354,0.315515,0.321321,0.283796,0.231463,0.188468};
-float res2rxn[6] = {0.173633,0.281287,0.280712,0.237884,0.183618,0.142537};
-float res2bbc[6] = {0,0,0,0,0,0};
-float res2fhcal[6] = {0.213222,0.451823,0.526875,0.527581,0.484467,0.412038};
-float res2fhcalFull[6] = {0.368115,0.655034,0.722089,0.722674,0.685413,0.615338};
-float res1fhcalFull[6] = {0.710464,0.88781,0.916106,0.916335,0.901146,0.869028};
+float res2tpc[8] = {0.215422,0.319671,0.321595,0.286121,0.230794,0.187664,0.169983,0.180262};
+float res2rxn[8] = {0.174276,0.278904,0.284986,0.235424,0.182337,0.145134,0.136635,0.154262};
+float res2bbc[8] = {0,0,0,0,0,0,0,0};
+float res2fhcal[8] = {0.21303,0.451618,0.525957,0.527378,0.486444,0.413006,0.317347,0.220505};
+float res2fhcalFull[8] = {0.367834,0.654836,0.721327,0.722506,0.687191,0.61634,0.508214,0.378717};
+float res1fhcalFull[8] = {0.710235,0.887721,0.915807,0.916269,0.901899,0.869522,0.809946,0.719049};
 
-if(fCent>=0&&fCent<6){
+if(fCent>=0&&fCent<ncent){
 
  
   float phiRP = 0.; // True RP plane angle
@@ -717,6 +732,7 @@ if(fCent>=0&&fCent<6){
   for(int itrk=0;itrk<nh;itrk++) {  //track loop
 
         float pt  = sqrt( TMath::Power(momx[itrk], 2.0 ) + TMath::Power(momy[itrk], 2.0 ) );
+        float p  = sqrt( TMath::Power(pt, 2.0 ) + TMath::Power(momz[itrk], 2.0 ) );
 	
 	float oldphi = atan2( momy[itrk], momx[itrk] );
 	float phi=oldphi;
@@ -742,6 +758,7 @@ if(fCent>=0&&fCent<6){
 
         //if( pt<0.15  || pt>4.0 ) continue;
         if ( pt<MpdPtMin || pt>MpdPtMax ) continue;
+        //if ( pt<StarPtMin || pt>StarPtMax ) continue;
         //if ( eta<MpdEtaMin || eta>MpdEtaMax ) continue;
 				if( ch == 0 || ch == -999. ) continue;
 
@@ -772,14 +789,14 @@ if(fCent>=0&&fCent<6){
          
 	}
 
-        if(eta<-1.*MpdEtaGap&&eta>-MpdEtaMin){
+        if(eta<-1.*MpdEtaGap&&eta>MpdEtaMin){
          v2tpc = cos(2.0 * (phi-fEP[0][1]) )/res2tpc[fCent];
          v2rxn = cos(2.0 * (phi-fEP[0][4]) )/res2rxn[fCent];
          v2bbc = cos(2.0 * (phi-fEP[0][6]) )/res2bbc[fCent];
          v2fhcal = cos(2.0 * (phi-fEP[0][8]) )/res2fhcal[fCent];
          v2fhcalFull = cos(2.0 * (phi-fhcalFullEP_phi) )/res2fhcalFull[fCent];
          v2RP = cos(2.0 * (dphiRP) );
-        //  v1fhcalFull = -1.0 * cos(1.0 * (phi-fhcalFullEP_phi) )/res1fhcalFull[fCent];
+         v1fhcalFull = -1.0 * cos(1.0 * (phi-fhcalFullEP_phi) )/res1fhcalFull[fCent];
          v1RP = -1.0 * cos(1.0 * (dphiRP) );
  
 	}
@@ -961,15 +978,15 @@ if(fCent>=0&&fCent<6){
 	   
 	}
 
-  if(pt>0.2&&pt<2.){
+  if(pt>MpdPtMin&&pt<MpdPtMax){
     pv1_y[3][fCent][0]->Fill(rapidity,cos(1.0 * (phi-fhcalFullEP_phi) )/res1fhcalFull[fCent]);
     pv1_y[4][fCent][0]->Fill(rapidity,cos(1.0 * (dphiRP) )); 
     if(fCent>0&&fCent<4){
       pv12_y[3][0]->Fill(rapidity,cos(1.0 * (phi-fhcalFullEP_phi) )/res1fhcalFull[fCent]);
       pv12_y[4][0]->Fill(rapidity,cos(1.0 * (dphiRP) ));
     }
-    if ( pdg[itrk]==211){
-      pv1_y[3][fCent][1]->Fill(rapidity,cos(1.0 * (oldphiV1 - fhcalFullEP_phi) ));///res1fhcalFull[fCent]);
+    if ( pdg[itrk]==211){ // && pt > StarPionPtMin & p < StarPionPMax){
+      pv1_y[3][fCent][1]->Fill(rapidity,cos(1.0 * (oldphiV1 - fhcalFullEP_phi) )/res1fhcalFull[fCent]);
       pv1_y[4][fCent][1]->Fill(rapidity,cos(1.0 * (dphiRP) )); 
       if(fCent>0&&fCent<4){
         pv12_y[3][1]->Fill(rapidity,cos(1.0 * (phi-fhcalFullEP_phi) )/res1fhcalFull[fCent]);
@@ -984,7 +1001,7 @@ if(fCent>=0&&fCent<6){
         pv12_y[4][2]->Fill(rapidity,cos(1.0 * (dphiRP) ));
       }
     }
-    if ( pdg[itrk]==2212){
+    if ( pdg[itrk]==2212){ // && pt > StarProtonPtMin && pt < StarProtonPtMax){
       pv1_y[3][fCent][3]->Fill(rapidity,cos(1.0 * (phi-fhcalFullEP_phi) )/res1fhcalFull[fCent]);
       pv1_y[4][fCent][3]->Fill(rapidity,cos(1.0 * (dphiRP) )); 
       if(fCent>0&&fCent<4){
@@ -1060,6 +1077,22 @@ int FlowANA::GetCentrality10_RefMultPHENIX( double refMult ){
 
 
 
+/*int FlowANA::GetCentrality10_Bimp( float bimp ){
+
+	int fcent;
+	if     ( bimp<4.17 ) fcent = 0; // 0-10%
+	else if( bimp<6.02 )  fcent = 1; //10-20%
+	else if( bimp<7.38 ) fcent = 2; //20-30%
+	else if( bimp<8.53 ) fcent = 3; //30-40%
+	else if( bimp<9.56)  fcent = 4; //40-50%
+	else if( bimp<10.50) fcent = 5; //50-60%
+	else if( bimp<11.35) fcent = 6; //60-70%
+	else if( bimp<12.19) fcent = 7; //70-80%
+	else                fcent =-1;
+
+	return fcent;
+}*/
+
 int FlowANA::GetCentrality10_Bimp( float bimp ){
 
 	int fcent;
@@ -1075,7 +1108,6 @@ int FlowANA::GetCentrality10_Bimp( float bimp ){
 
 	return fcent;
 }
-
 
 int FlowANA::GetCentrality10_BimpExp( float bimp ){
 

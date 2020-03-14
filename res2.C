@@ -52,28 +52,30 @@ gSystem->Load(libMathMore.so);
 //TFile *file = new TFile("sum.root");
 //TFile *file = new TFile("./out/res_11gev.root");
 //TFile *file = new TFile("./out/res_7gev_new.root");
-TFile *file = new TFile("./OUT/7gev/urqmd_flow_7gev_check.root");
+//TFile *file = new TFile("./OUT/7gev/urqmd_flow_7gev_check.root");
+TFile *file = new TFile("./OUT/urqmd/7.7gev/urqmd_flow_7gev_check.root");
+//TFile *file = new TFile("./OUT/ampt/7.7gev_melt_6mb/res_ampt_7.7gev.root");
   
 char hname1[800];
 char title[800];
 
 
-
+const int ncent = 8;
  
- float res2tpcEW[6];
- float res2rxnEW[6]; 
- float res2bbcEW[6];
- float res2fhcalEW[6];
- float res2fhcalFull[6];
- float res1fhcalFull[6];
+ float res2tpcEW[ncent];
+ float res2rxnEW[ncent]; 
+ float res2bbcEW[ncent];
+ float res2fhcalEW[ncent];
+ float res2fhcalFull[ncent];
+ float res1fhcalFull[ncent];
 
-float cent[6]={5,15,25,35,45,55};
-float eres[6];
-float ecent[6];
+float cent[ncent]={5,15,25,35,45,55,65,75};
+float eres[ncent];
+float ecent[ncent];
 
 float chi, res, chiF, resF;
  
-for (int ic=0; ic<6; ic++) {
+for (int ic=0; ic<ncent; ic++) {
 
 (void) sprintf(hname1,"HRes_%i_%i_%i",0,0,ic);
 TH1F *h3 = (TH1F*) file->Get(hname1);
@@ -121,40 +123,40 @@ res1fhcalFull[ic]=resF;
  }
  cout << endl;
  cout << "Resolution for the analysis:" << endl;
- cout << "float res2tpc[6] = {";
- for (int ic=0; ic<6; ic++) {
+ cout << "float res2tpc[8] = {";
+ for (int ic=0; ic<ncent; ic++) {
    cout << res2tpcEW[ic];
-   if (ic < 5) cout << ",";
+   if (ic < ncent-1) cout << ",";
    else cout << "};" << endl;
  }
- cout << "float res2rxn[6] = {";
- for (int ic=0; ic<6; ic++) {
+ cout << "float res2rxn[8] = {";
+ for (int ic=0; ic<ncent; ic++) {
    cout << res2rxnEW[ic];
-   if (ic < 5) cout << ",";
+   if (ic < ncent-1) cout << ",";
    else cout << "};" << endl;
  }
- cout << "float res2bbc[6] = {";
- for (int ic=0; ic<6; ic++) {
+ cout << "float res2bbc[8] = {";
+ for (int ic=0; ic<ncent; ic++) {
    cout << res2bbcEW[ic];
-   if (ic < 5) cout << ",";
+   if (ic < ncent-1) cout << ",";
    else cout << "};" << endl;
  }
- cout << "float res2fhcal[6] = {";
- for (int ic=0; ic<6; ic++) {
+ cout << "float res2fhcal[8] = {";
+ for (int ic=0; ic<ncent; ic++) {
    cout << res2fhcalEW[ic];
-   if (ic < 5) cout << ",";
+   if (ic < ncent-1) cout << ",";
    else cout << "};" << endl;
  }
- cout << "float res2fhcalFull[6] = {";
- for (int ic=0; ic<6; ic++) {
+ cout << "float res2fhcalFull[8] = {";
+ for (int ic=0; ic<ncent; ic++) {
    cout << res2fhcalFull[ic];
-   if (ic < 5) cout << ",";
+   if (ic < ncent-1) cout << ",";
    else cout << "};" << endl;
  }
- cout << "float res1fhcalFull[6] = {";
- for (int ic=0; ic<6; ic++) {
+ cout << "float res1fhcalFull[8] = {";
+ for (int ic=0; ic<ncent; ic++) {
    cout << res1fhcalFull[ic];
-   if (ic < 5) cout << ",";
+   if (ic < ncent-1) cout << ",";
    else cout << "};" << endl;
  }
  cout << endl;
